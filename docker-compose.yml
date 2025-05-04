@@ -1,0 +1,74 @@
+services:
+    db:
+        image: mysql:8.0.33
+        platform: linux/x86_64
+        command: --default-authentication-plugin=mysql_native_password
+        volumes:
+            - "db_app:/var/lib/mysql"
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        ports:
+            - 3306:3306
+        networks:
+            - symfony_app
+    php:
+        build:
+            context: ./Docker/php
+            args:
+                TIMEZONE: ${TIMEZONE}
+        volumes:
+            - ./Backend/:/var/www/symfony:cached
+            - symfony_app_var:/var/www/symfony/var
+            - symfony_app_vendor:/var/www/symfony/vendor
+        environment:
+            DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db/${MYSQL_DATABASE}?serverVersion=8.0.33&charset=utf8mb4
+        networks:
+            - symfony_app
+
+    nginx_backend:
+        build:
+            context: ./Docker/nginx_backend
+        volumes:
+            - ./Backend/:/var/www/symfony:cached
+            - symfony_app_var:/var/www/symfony/var
+            - symfony_app_vendor:/var/www/symfony/vendor
+        environment:
+            NGINX_BACKEND_DOMAIN: localhost
+        ports:
+            - 8880:80
+        networks:
+            - symfony_app
+
+    nginx_frontend:
+        build:
+            context: ./Docker/nginx_frontend
+        volumes:
+            - ./Frontend/dist:/var/www/vue:cached
+        ports:
+            - 8888:80
+        networks:
+            - symfony_app
+
+    node:
+        build:
+            context: .
+            dockerfile: ./Docker/node/Dockerfile
+            #target: app_node_prod
+        restart: unless-stopped
+        ports:
+            - "5173:5173"
+        volumes:
+            - ./Frontend/:/srv/app
+        stdin_open: true
+        tty: true
+
+volumes:
+    symfony_app_var:
+    symfony_app_vendor:
+    db_app:
+
+networks:
+    symfony_app:

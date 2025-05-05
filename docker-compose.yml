@@ -38,7 +38,7 @@ services:
         environment:
             NGINX_BACKEND_DOMAIN: localhost
         ports:
-            - 8880:80
+            - 8881:80
         networks:
             - symfony_app
 
@@ -48,7 +48,7 @@ services:
         volumes:
             - ./Frontend/dist:/var/www/vue:cached
         ports:
-            - 8888:80
+            - 8880:80
         networks:
             - symfony_app
 

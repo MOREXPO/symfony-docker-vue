@@ -3,4 +3,4 @@ docker.env
 client.env
 /.env
 /Backend/*
-/Frontend*
+/Frontend/*
